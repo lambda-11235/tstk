@@ -23,7 +23,7 @@ addAST state newAST = state {ast = (ast state) ++ newAST}
 
 -- | Evaluates the AST and returns an IO monad.
 eval :: State -- ^ The initial state of the TSTK program.
-        -> IO (State) -- ^ An IO monad containing the state after evaluation.
+        -> IO State -- ^ An IO monad containing the state after evaluation.
 eval state = exec $ state {labels = (getLabels (ast state))}
 
 -- | Returns a map of labels to their positions in the AST.
@@ -39,14 +39,13 @@ getLabels ast = getLabels' ast 0
 -- | Executes a given statement in the AST and returns an IO monad.
 exec ::
   State -- ^ The state of the TSTK program.
-  -> IO (State) -- ^ The resulting IO monad.
+  -> IO State -- ^ The resulting IO monad.
 exec state@(State ast place stk labels) = if place < (length ast) then
   case (ast !! place) of
     Label name -> exec $ nextPl state
-    Refer name -> do{ case (lookup name labels) of
-                         Nothing -> fail ("Couldn't find label " ++ name)
-                         Just pos -> exec $ nextPl $ state {stk = ((toInteger pos):stk)}
-                    }
+    Refer name -> case (lookup name labels) of
+      Nothing -> fail ("Couldn't find label " ++ name)
+      Just pos -> exec $ nextPl $ state {stk = ((toInteger pos):stk)}
     Command name -> command name state
     Number n ->  exec $ nextPl $ state {stk = n:stk}
   else
@@ -56,7 +55,7 @@ exec state@(State ast place stk labels) = if place < (length ast) then
 command ::
   String -- ^ The name of the command.
   -> State -- ^ The state of the current execution environment.
-  -> IO (State) -- ^ The resulting IO monad.
+  -> IO State -- ^ The resulting IO monad.
 command name state@(State ast place stk labels) = case (name, stk) of
   ("add", (n:m:rest)) -> execNext state {stk = ((m + n):rest)}
   ("sub", (n:m:rest)) -> execNext state {stk = ((m - n):rest)}
@@ -100,5 +99,5 @@ command name state@(State ast place stk labels) = case (name, stk) of
                    ++ "the stack")
   where
     -- | Executes the next statement in the AST.
-    execNext :: State -> IO (State)
+    execNext :: State -> IO State
     execNext = exec . nextPl

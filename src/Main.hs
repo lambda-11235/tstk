@@ -4,12 +4,13 @@ module Main(main) where
 import Parse(program)
 import Eval(addAST, eval, newState, State(ast, place, stk, labels))
 
+import Control.Monad(unless)
 import System.Environment
 import System.IO
 import Text.ParserCombinators.Parsec(parse, parseFromFile)
 
 main = do { args <- getArgs
-          ; if (length args) > 0 then runFiles args else repl
+          ; if not (null args) then runFiles args else repl
           }
 
 -- | Runs multiple file one after the other in the same runtime.
@@ -46,14 +47,14 @@ repl = do { code <- getLine
   where
     repl' :: State -> IO ()
     repl' state = do { print $ stk state
-                     ; iseof <- hIsEOF stdin
-                     ; if iseof then return ()
-                       else do {code <- getLine
-                               ; case parse program "TSTK parser" code of {
-                                 Left err -> print err
-                                 ; Right ast -> do { state <- eval $ addAST state ast
-                                                   ; repl' state
-                                                   }
-                                 }
-                               }
+                     ; iseof <- isEOF
+                     ; unless iseof $
+                       do {code <- getLine
+                          ; case parse program "TSTK parser" code of {
+                            Left err -> print err
+                            ; Right ast -> do { state <- eval $ addAST state ast
+                                              ; repl' state
+                                              }
+                            }
+                          }
                      }

@@ -32,7 +32,7 @@ programPart = do{ tok <- token
                 ; return tok
                 }
 
-comment :: Parser [Char]
+comment :: Parser String
 comment = do { char '#'
              ; manyTill anyChar newline
              }
