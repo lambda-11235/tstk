@@ -21,48 +21,41 @@ instance Show Node where
 -- | Simple parser that returns a list of nodes in the AST, which is always one
 -- level deep.
 program :: Parser [Node]
-program = do{ skipMany ((many1 space) <|> comment)
-            ; many programPart
-            }
+program = do skipMany ((many1 space) <|> comment)
+             many programPart
 
 -- | This takes care of any spaces or comments.
 programPart :: Parser Node
-programPart = do{ tok <- token
-                ; skipMany ((many1 space) <|> comment)
-                ; return tok
-                }
+programPart = do tok <- token
+                 skipMany ((many1 space) <|> comment)
+                 return tok
 
 comment :: Parser String
-comment = do { char '#'
-             ; manyTill anyChar newline
-             }
+comment = do char '#'
+             manyTill anyChar newline
 
 token :: Parser Node
 token = label <|> refer <|> command <|> integer
 
 label :: Parser Node
-label = do{ char ':'
-          ; name <- (many1 alpha)
-          ; char ':'
-          ; return $ Label name
-          }
+label = do char ':'
+           name <- (many1 alpha)
+           char ':'
+           return $ Label name
 
 refer :: Parser Node
-refer = do{ char '@'
-          ; name <- (many1 alpha)
-          ; return $ Refer name
-          }
+refer = do char '@'
+           name <- (many1 alpha)
+           return $ Refer name
 
 command :: Parser Node
-command = do{ name <- many1 alpha
-            ; return $ Command name
-            }
+command = do name <- many1 alpha
+             return $ Command name
 
 integer :: Parser Node
-integer = do{ sign <- option '0' (char '-')
-            ; ds <- many1 digit
-            ; return $ Number (read (sign:ds) :: Integer)
-            }
+integer = do sign <- option '0' (char '-')
+             ds <- many1 digit
+             return $ Number (read (sign:ds) :: Integer)
 
 alpha :: Parser Char
 alpha = letter

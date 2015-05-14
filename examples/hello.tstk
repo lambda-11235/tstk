@@ -1,0 +1,19 @@
+# The traditional "Hello world!" program.
+
+10  # \n
+100 # d
+108 # l
+114 # r
+111 # o
+119 # w
+32  #  
+111 # o
+108 # l
+108 # l
+101 # e
+72  # H
+
+# Print all the numbers on the stack as their ascii character
+:ploop:
+cprint
+@ploop size 1 jgt

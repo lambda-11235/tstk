@@ -3,14 +3,15 @@ module Eval(addAST, eval, newState, State(ast, place, stk, labels)) where
 
 import Parse
 
--- | Holds the current state of evaluation.
-data State = State { ast :: [Node]
-                   , place :: Int
-                   , stk :: [Integer]
-                   , labels :: [(String, Int)]
+-- | Holds the current state of evaluation in a TSTK program.
+data State = State { ast :: [Node] -- ^ The abstract syntax tree of the TSTK code.
+                   , place :: Int -- ^ The place in the AST being evaluated.
+                   , stk :: [Integer] -- ^ The stack for this TSTK program.
+                   , labels :: [(String, Int)] -- ^ A map of label names to
+                                               -- their place in the AST.
                    }
 
--- | Gets the next place in the AST at the current state.
+-- | Gets the next symbol in the AST at the current state.
 nextPl :: State -> State
 nextPl state = state {place = (place state) + 1}
 
@@ -40,17 +41,23 @@ getLabels ast = getLabels' ast 0
 exec ::
   State -- ^ The state of the TSTK program.
   -> IO State -- ^ The resulting IO monad.
-exec state@(State ast place stk labels) = if place < (length ast) then
-  case (ast !! place) of
+exec state = if (place state) < (length $ ast state)
+             then run state
+             else return state
+
+run :: State -> IO State
+run state@(State ast place stk labels) = case (ast !! place) of
     Label name -> exec $ nextPl state
-    Refer name -> case (lookup name labels) of
-      Nothing -> fail ("Couldn't find label " ++ name)
-      Just pos -> exec $ nextPl $ state {stk = ((toInteger pos):stk)}
+    Refer name -> refer name state
     Command name -> command name state
     Number n ->  exec $ nextPl $ state {stk = n:stk}
-  else
-    return state
 
+refer :: String -> State -> IO State
+refer name state@(State ast place stk labels) = case (lookup name labels) of
+  Nothing -> fail ("Couldn't find label " ++ name)
+  Just pos -> exec $ nextPl $ state {stk = ((toInteger pos):stk)}
+
+-- TODO: This should be broken up into multiple statements
 -- | Executes a command and returns an IO monad.
 command ::
   String -- ^ The name of the command.
