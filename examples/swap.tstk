@@ -1,0 +1,6 @@
+# Reads two numbers and prints them in correct order
+read read
+
+swap
+
+print print

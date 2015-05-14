@@ -1,0 +1,5 @@
+# Read two numbers, add them, and print the result
+read
+read
+add
+print

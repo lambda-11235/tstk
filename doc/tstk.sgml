@@ -1,0 +1,28 @@
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook//EN">
+<refentry id="tstk">
+  <refmeta>
+    <refentrytitle>tstk</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+
+  <refnamediv>
+    <refname>tstk</refname>
+    <refpurpose>a stack based programming language</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>tstk</command>
+      <arg choice="opt" rep="repeat">file</arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1><title>Description</title>
+    <para>
+      TSTK is a stack based programming language. Given no arguments
+      <command>tstk</command> starts the TSTK REPL. If it is given a series of
+      filenames as argument, then it runs a concatenation of the code in those
+      files.
+    </para>
+  </refsect1>
+</refentry>

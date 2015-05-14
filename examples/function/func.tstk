@@ -1,0 +1,10 @@
+# A simple function to print both its arguments
+
+# Don't execute this library file
+@funcend jmp
+
+# Args: 2
+:func:
+print print jmp
+
+:funcend:

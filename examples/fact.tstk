@@ -1,0 +1,35 @@
+# Reads a number and prints the factorial
+
+read
+
+# Jump to :one: if input is 1 or lower
+@one 1 nth 2 jlt
+
+1
+
+# Create a range of numbers from 2 to the inputed number and push them on the
+# stack
+:range:
+
+dup 1 add
+
+@range
+1 nth
+size 1 sub nth
+jlt
+
+# Multilpy the numbers on the stack
+:mul:
+
+mul
+
+@mul size 3 jgt
+
+# Print number and end program
+print
+@end jmp
+
+:one:
+1 print
+
+:end:

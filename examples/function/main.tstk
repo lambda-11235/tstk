@@ -1,0 +1,7 @@
+# Calls func with arguments 1 2
+
+@rpos
+1
+2
+@func jmp
+:rpos:
