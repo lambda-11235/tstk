@@ -60,15 +60,11 @@ command = do{ name <- many1 alpha
 
 integer :: Parser Node
 integer = do{ sign <- option '0' (char '-')
-            ; fd <- nonzero
-            ; ds <- many digit
-            ; return $ Number (read (sign : fd : ds) :: Integer)
+            ; ds <- many1 digit
+            ; return $ Number (read (sign:ds) :: Integer)
             }
 
 alpha :: Parser Char
 alpha = letter
 
 {- digit = ...; does not need to be declared -}
-
-nonzero :: Parser Char
-nonzero = oneOf "123456789"
