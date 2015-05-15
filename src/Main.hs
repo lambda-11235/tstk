@@ -1,8 +1,8 @@
 
 module Main(main) where
 
-import Parse(program)
-import Eval(addAST, eval, newState, State(ast, place, stk, labels))
+import TSTK.Parse(program)
+import TSTK.Eval(addAST, eval, newState, State(ast, place, stk, labels))
 
 import Control.Monad(unless)
 import System.Environment

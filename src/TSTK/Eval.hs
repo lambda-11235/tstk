@@ -1,7 +1,14 @@
+{-|
+Module: TSTK.Eval
+Description: Functions for evaluating TSTK code.
+License: GPL-3
 
-module Eval(addAST, eval, newState, State(ast, place, stk, labels)) where
+This module contains facilities to evaluate parse TSTK code.
+-}
 
-import Parse
+module TSTK.Eval(addAST, eval, newState, State(ast, place, stk, labels)) where
+
+import TSTK.Parse
 
 -- | Holds the current state of evaluation in a TSTK program.
 data State = State { ast :: [Node] -- ^ The abstract syntax tree of the TSTK code.
@@ -11,9 +18,9 @@ data State = State { ast :: [Node] -- ^ The abstract syntax tree of the TSTK cod
                                                -- their place in the AST.
                    }
 
--- | Gets the next symbol in the AST at the current state.
-nextPl :: State -> State
-nextPl state = state {place = (place state) + 1}
+-- | Executes the next statement in the AST.
+execNext :: State -> IO State
+execNext state = exec $ state {place = (place state) + 1}
 
 -- | Constructs a new state from an AST.
 newState :: [Node] -> State
@@ -47,15 +54,15 @@ exec state = if (place state) < (length $ ast state)
 
 run :: State -> IO State
 run state@(State ast place stk labels) = case (ast !! place) of
-    Label name -> exec $ nextPl state
+    Label name -> execNext state
     Refer name -> refer name state
     Command name -> command name state
-    Number n ->  exec $ nextPl $ state {stk = n:stk}
+    Number n ->  execNext state {stk = n:stk}
 
 refer :: String -> State -> IO State
 refer name state@(State ast place stk labels) = case (lookup name labels) of
   Nothing -> fail ("Couldn't find label " ++ name)
-  Just pos -> exec $ nextPl $ state {stk = ((toInteger pos):stk)}
+  Just pos -> execNext state {stk = ((toInteger pos):stk)}
 
 -- TODO: This should be broken up into multiple statements
 -- | Executes a command and returns an IO monad.
@@ -104,7 +111,3 @@ command name state@(State ast place stk labels) = case (name, stk) of
   (_, ns) -> fail ("Command \"" ++ name ++ "\" does not exist or does not work "
                    ++ "when only " ++ show (length ns) ++ " elements are on "
                    ++ "the stack")
-  where
-    -- | Executes the next statement in the AST.
-    execNext :: State -> IO State
-    execNext = exec . nextPl

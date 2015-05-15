@@ -1,7 +1,13 @@
-{- A parser for tstk.
+{-|
+Module: TSTK.Parse
+Description: Functions for parsing TSTK code.
+License: GPL-3
+
+This module contains functions to parse TSTK code into an abstract syntax
+tree (AST).
 -}
 
-module Parse(Node(Label, Refer, Command, Number), program) where
+module TSTK.Parse(Node(Label, Refer, Command, Number), program) where
 
 import Text.ParserCombinators.Parsec hiding (label, token)
 
