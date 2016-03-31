@@ -40,6 +40,7 @@ getLabels ::
   -> [(String, Int)]
 getLabels ast = getLabels' ast 0
   where
+    getLabels' [] _ = []
     getLabels' (node:nodes) place = case node of
       Label name -> (name, place):(getLabels' nodes (place + 1))
       _ -> getLabels' nodes (place + 1)
