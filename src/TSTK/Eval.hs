@@ -79,10 +79,10 @@ command name state@(State ast place stk labels) = case (name, stk) of
   ("dup", (n:rest)) -> execNext state {stk = (n:n:rest)}
   ("jmp", (n:rest)) -> exec state {place = (fromInteger n), stk = rest}
   ("jeq", (n:m:pos:rest)) -> if m == n then exec $ state {place = (fromInteger pos),
-                                                        stk = rest}
+                                                          stk = rest}
                              else execNext state {stk = rest}
   ("jnq", (n:m:pos:rest)) -> if m /= n then exec $ state {place = (fromInteger pos),
-                                                        stk = rest}
+                                                          stk = rest}
                              else execNext state {stk = rest}
   ("jgt", (n:m:pos:rest)) -> if m > n then exec $ state {place = (fromInteger pos),
                                                          stk = rest}
@@ -93,20 +93,18 @@ command name state@(State ast place stk labels) = case (name, stk) of
   ("nth", (n:rest)) -> execNext state {stk = ((rest !! (fromInteger n)):rest)}
   ("pop", (n:rest)) -> execNext state {stk = rest}
   ("ppos", rest) -> execNext state {stk = ((toInteger place):rest)}
-  ("print", (n:rest)) -> do { print n
-                            ; execNext state {stk = rest}
-                            }
-  ("cprint", (n:rest)) -> do { putChar (toEnum (fromInteger n))
-                             ; execNext state {stk = rest}
-                             }
-  ("read", rest) -> do { num <- getLine
-                       ; execNext
-                         state {stk = ((read num :: Integer):rest)}
-                       }
-  ("cread", rest) -> do { ch <- getChar
-                        ; execNext
-                          state {stk = ((toInteger (fromEnum ch)):rest)}
-                        }
+  ("print", (n:rest)) -> do  print n
+                             execNext state {stk = rest}
+
+  ("cprint", (n:rest)) -> do putChar (toEnum (fromInteger n))
+                             execNext state {stk = rest}
+
+  ("read", rest) -> do  num <- getLine
+                        execNext state {stk = ((read num :: Integer):rest)}
+
+  ("cread", rest) -> do ch <- getChar
+                        execNext state {stk = ((toInteger (fromEnum ch)):rest)}
+
   ("size", rest) -> execNext state {stk = ((toInteger (length rest)):rest)}
   ("swap", (n:m:rest)) -> execNext state {stk = (m:n:rest)}
   (_, ns) -> fail ("Command \"" ++ name ++ "\" does not exist or does not work "
