@@ -1,0 +1,7 @@
+# Demonstrates how memory is addressed.
+
+ppos
+print
+@foo
+print
+:foo:

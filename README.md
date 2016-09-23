@@ -7,35 +7,36 @@
 ## Description
 
 TSTK is a stack based programming language. Comments start with \# and extend to
-the end of the line. All numbers are arbitrary precision integers. The EBNF for
-this language is given below.
+the end of the line. All numbers are either arbitrary precision integers or have
+a length equal to the current architectures bus width. Every token (see EBNF) is
+indexed starting from zero as far as jumps are concerned.
 
 ##### EBNF
 
 ```
-program = token program | token
+program = token program | token ;
 
-token = command | integer | label | reference
+token = command | integer | label | reference ;
 
-label = ':' {alpha} ':'
+label = ':', {alpha}, ':' ;
 
-reference = '@' {alpha}
+reference = '@', {alpha} ;
 
-command = {alpha}
+command = {alpha} ;
 
-integer = '-'? {digit}
+integer = '-'?, {digit} ;
 
-alpha = upper | lower
+alpha = upper | lower ;
 
 lower = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l'
             | 'm' | 'n' | 'o' | 'p' | 'q' | 'r' | 's' | 't' | 'u' | 'v' | 'w'
-            | 'x' | 'y' | 'z'
+            | 'x' | 'y' | 'z' ;
 
 upper = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K' | 'L'
             | 'M' | 'N' | 'O' | 'P' | 'Q' | 'R' | 'S' | 'T' | 'U' | 'V' | 'W'
-            | 'X' | 'Y' | 'Z'
+            | 'X' | 'Y' | 'Z' ;
 
-digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'
+digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;
 ```
 
 ## Commands
@@ -62,7 +63,8 @@ first number, and pushes the result.
 
 dup - Duplicates the number on the top of the stack.
 
-jmp - Pops a number off the stack and goes to that place in memory.
+jmp - Pops a number off the stack and goes to that token in the program (indexed
+from 0).
 
 jeq - Pops three numbers of the stack, tests if first two are equal, and jumps
 to the third one if they are.
