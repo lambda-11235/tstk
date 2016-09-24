@@ -65,6 +65,13 @@ refer name state@(State ast place stk labels) = case (lookup name labels) of
   Nothing -> fail ("Couldn't find label " ++ name)
   Just pos -> execNext state {stk = ((toInteger pos):stk)}
 
+set :: Integer -> Integer -> [Integer] -> Maybe [Integer]
+set _ _ [] = Nothing
+set n val (x:xs) | n < 0 = Nothing
+                 | n == 0 = Just (val:xs)
+                 | otherwise = do xs' <- set (n - 1) val xs
+                                  return $ x:xs'
+
 -- TODO: This should be broken up into multiple statements
 -- | Executes a command and returns an IO monad.
 command ::
@@ -76,25 +83,39 @@ command name state@(State ast place stk labels) = case (name, stk) of
   ("sub", (n:m:rest)) -> execNext state {stk = ((m - n):rest)}
   ("mul", (n:m:rest)) -> execNext state {stk = ((m * n):rest)}
   ("div", (n:m:rest)) -> execNext state {stk = ((m `div` n):rest)}
+
   ("dup", (n:rest)) -> execNext state {stk = (n:n:rest)}
+
   ("jmp", (n:rest)) -> exec state {place = (fromInteger n), stk = rest}
-  ("jeq", (n:m:pos:rest)) -> if m == n then exec $ state {place = (fromInteger pos),
+
+  ("jeq", (pos:n:m:rest)) -> if m == n then exec $ state {place = (fromInteger pos),
                                                           stk = rest}
                              else execNext state {stk = rest}
-  ("jnq", (n:m:pos:rest)) -> if m /= n then exec $ state {place = (fromInteger pos),
+
+  ("jnq", (pos:n:m:rest)) -> if m /= n then exec $ state {place = (fromInteger pos),
                                                           stk = rest}
                              else execNext state {stk = rest}
-  ("jgt", (n:m:pos:rest)) -> if m > n then exec $ state {place = (fromInteger pos),
+
+  ("jgt", (pos:n:m:rest)) -> if m > n then exec $ state {place = (fromInteger pos),
                                                          stk = rest}
                              else execNext state {stk = rest}
-  ("jlt", (n:m:pos:rest)) -> if m < n then exec $ state {place = (fromInteger pos),
+
+  ("jlt", (pos:n:m:rest)) -> if m < n then exec $ state {place = (fromInteger pos),
                                                          stk = rest}
                              else execNext state {stk = rest}
-  ("nth", (n:rest)) -> execNext state {stk = ((rest !! (fromInteger n)):rest)}
+
+  ("get", (n:rest)) -> execNext state {stk = ((rest !! (fromInteger n)):rest)}
+
+  ("set", (n:val:rest)) -> case set n val rest of
+                            Just stk -> execNext state {stk = stk}
+                            Nothing -> fail $ (show n) ++ " is not within the bounds of the stack"
+
   ("pop", (n:rest)) -> execNext state {stk = rest}
+
   ("ppos", rest) -> execNext state {stk = ((toInteger place):rest)}
-  ("print", (n:rest)) -> do  print n
-                             execNext state {stk = rest}
+
+  ("print", (n:rest)) -> do print n
+                            execNext state {stk = rest}
 
   ("cprint", (n:rest)) -> do putChar (toEnum (fromInteger n))
                              execNext state {stk = rest}
@@ -106,6 +127,10 @@ command name state@(State ast place stk labels) = case (name, stk) of
                         execNext state {stk = ((toInteger (fromEnum ch)):rest)}
 
   ("size", rest) -> execNext state {stk = ((toInteger (length rest)):rest)}
+
+  ("dbg", stk) -> do print stk
+                     execNext state
+
   ("swap", (n:m:rest)) -> execNext state {stk = (m:n:rest)}
   (_, ns) -> fail ("Command \"" ++ name ++ "\" does not exist or does not work "
                    ++ "when only " ++ show (length ns) ++ " elements are on "

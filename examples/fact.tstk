@@ -2,34 +2,35 @@
 
 read
 
-# Jump to :one: if input is 1 or lower
-@one 1 nth 2 jlt
+ppos 6 add    # Set return address to just after the next jmp
+swap          # Put the argument(s) after the return address
+@fact jmp     # Jump to fact function
 
-1
-
-# Create a range of numbers from 2 to the inputed number and push them on the
-# stack
-:range:
-
-dup 1 add
-
-@range
-1 nth
-size 1 sub nth
-jlt
-
-# Multilpy the numbers on the stack
-:mul:
-
-mul
-
-@mul size 3 jgt
-
-# Print number and end program
+# Print result and end program
 print
 @end jmp
 
+# The factorial function
+:fact:
+# Simply return 1 if input is <= 1
+dup 2 @one jlt
+
+# Compute the factorial of the argument - 1.
+dup 1 sub
+ppos 6 add swap
+@fact jmp
+
+# Multiply and return
+mul
+@factEnd jmp
+
 :one:
-1 print
+pop
+1
+
+:factEnd:
+# Swap the result and the return address, and then jmp
+swap
+jmp
 
 :end:

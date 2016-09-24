@@ -41,66 +41,84 @@ digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;
 
 ## Commands
 
-The following commands are recognized.
+The following commands are recognized. I'll use stack notation `...,a,b` where
+values to the right are on the top of the stack, and `->` to  denote the
+transformation.
 
-*integer* - Pushes an integer onto the stack.
+*integer* - Pushes an integer onto the stack. `... -> ...,n`
 
 :*name*: - Labels the current position with *name*. Multiple occurences of the
-same label is an error.
+same label is an error. `... -> ...`
 
 @*name* - Pushes the position of the label *name* onto the stack. Note that this
-can be placed before the corresponding :*name*:.
+can be placed before the corresponding :*name*:. `... -> ...,addr`
 
 add - Pops two numbers off the stack, adds them, and pushes the result.
+`...,a,b -> ...,(a+b)`
 
 sub - Pops two numbers off the stack, subtracts the second number from the first
 number, and pushes the result.
+`...,a,b -> ...,(a-b)`
 
 mul - Pops two numbers off the stack, multiplies them, and pushes the result.
+`...,a,b -> ...,(a*b)`
 
 div - Pops two numbers off the stack, floor divides the second number by the
 first number, and pushes the result.
+`...,a,b -> ...,(a//b)`
 
-dup - Duplicates the number on the top of the stack.
+dup - Duplicates the number on the top of the stack. `...,a -> ...,a,a`
 
 jmp - Pops a number off the stack and goes to that token in the program (indexed
-from 0).
+from 0). `...,addr -> ...`
 
-jeq - Pops three numbers of the stack, tests if first two are equal, and jumps
-to the third one if they are.
+jeq - Pops three numbers of the stack, tests if last two are equal, and jumps
+to the first one if they are. `...,a,b,addr -> ...` if `a = b`
 
-jnq - Pops three numbers of the stack, tests if first two are equal, and jumps
-to the third one if they aren't.
+jnq - Pops three numbers of the stack, tests if last two are equal, and jumps
+to the first one if they aren't. `...,a,b,addr -> ...` if `a != b`
 
-jgt - Pops three numbers of the stack, tests if the second is greater than the
-first, and jumps to the third one if they are.
+jgt - Pops three numbers of the stack, tests if the third is greater than the
+second, and jumps to the first one if they are. `...,a,b,addr -> ...` if `a > b`
 
-jlt - Pops three numbers of the stack, tests if the second is less than the
-first, and jumps to the third one if they are.
+jlt - Pops three numbers of the stack, tests if the third is less than the
+second, and jumps to the first one if they are. `...,a,b,addr -> ...` if `a < b`
 
-nth - Pops a number n off the stack, duplicates the value of the nth number from
+get - Pops a number n off the stack, duplicates the value of the nth number from
 the top of the stack (counting from 0), and pushes that value on the stack.
+`...,a,...,n -> ...,a,...,a`
 
-pop - Pops the top of the stack.
+set - Pops two numbers off of the stack, and stores second number at a ways down
+the stack indexed by the first number (from 0). `...,a,...,b,n -> ...,b,...`
 
-ppos - Pushes the current memory location onto the stack.
+pop - Pops the top of the stack. `...,a -> ...`
 
-print - Pops a number and prints it.
+ppos - Pushes the current memory location onto the stack. `... -> ...,addr`
+
+print - Pops a number and prints it. `...,a -> ...`
 
 cprint - Pops a number and prints a unicode character with its value.
+`...,a -> ...`
 
-read - Read a number and pushes it onto the stack.
+read - Read a number and pushes it onto the stack. `...,a -> ...`
 
 cread - Reads a unicode character and pushes its value onto the stack.
+`...,a -> ...`
 
-size - Pushes the size of the stack onto the stack.
+size - Pushes the size of the stack onto the stack. `... -> ...,size`
 
-swap - Swaps the two numbers on the top of the stack.
+swap - Swaps the two numbers on the top of the stack. `...,a,b -> ...,b,a`
+
+dbg - Prints the entire stack (useful for debugging). Optional for some
+implementations. `... -> ...`
 
 ## Goals
 
-TSTK was designed to be one of the simplest **usuable** programming
-language. The usuable part of TSTK is why I developed a new language instead of
-using one like brain\*\*\*\*.
+TSTK was designed be a simple, abstract, stack-based, and assembly-like
+language. I found that I rather liked assembly as a language, so I wanted to
+create a conceptually simple and architecture independent language that captured
+some of the features I liked about it.
 
-Wishlist:
+TODO:
+
+- Rewrite parser to use a lexer.

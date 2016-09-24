@@ -15,4 +15,6 @@ read
 dup print
 
 # Loop back if the current number is less than the user input
-@loop 1 nth 3 nth jlt
+dup
+2 get
+@loop jlt

@@ -37,7 +37,7 @@ repl = do code <- getLine
 
   where
     repl' :: State -> IO ()
-    repl' state = do print $ stk state
+    repl' state = do print $ reverse $ stk state
                      iseof <- isEOF
                      unless iseof $
                        do code <- getLine
