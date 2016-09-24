@@ -128,7 +128,7 @@ command name state@(State ast place stk labels) = case (name, stk) of
 
   ("size", rest) -> execNext state {stk = ((toInteger (length rest)):rest)}
 
-  ("dbg", stk) -> do print stk
+  ("dbg", stk) -> do print $ reverse stk
                      execNext state
 
   ("swap", (n:m:rest)) -> execNext state {stk = (m:n:rest)}
