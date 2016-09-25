@@ -32,8 +32,8 @@ newState = State [] 0 [] M.empty
 
 -- | Converts an AST with labels to a series of commands, with references being
 -- replaced by their addresses.
-convertLabels :: AST -> Maybe [Command]
-convertLabels ast = conLbls (getLabels ast) ast
+convertLabels :: AST -> Int -> Maybe [Command]
+convertLabels ast n = conLbls (getLabels ast n) ast
   where
     conLbls _ [] = return []
     conLbls lbls ((Label _):ast) = conLbls lbls ast
@@ -44,17 +44,15 @@ convertLabels ast = conLbls (getLabels ast) ast
                                           return (com:coms)
 
 -- | Returns a map of label names to the addresses they refer to.
-getLabels :: AST -> M.Map String Int
-getLabels ast = getLabels' ast 0
-  where
-    getLabels' [] _ = M.empty
-    getLabels' ((Label name) : ast) n = let lbls = getLabels' ast n
-                                        in M.insert name n lbls
-    getLabels' (_:ast) n = getLabels' ast (n + 1)
+getLabels :: AST -> Int -> M.Map String Int
+getLabels [] _ = M.empty
+getLabels ((Label name) : ast) n = let lbls = getLabels ast n
+                                    in M.insert name n lbls
+getLabels (_:ast) n = getLabels ast (n + 1)
 
 -- | Appends an AST to the given state.
 addAST :: State -> AST -> Maybe State
-addAST state newAST = do newComs <- convertLabels newAST
+addAST state newAST = do newComs <- convertLabels newAST (length $ coms state)
                          return $ state {coms = (coms state) ++ newComs}
 
 -- | Executes a given statement in the AST and returns an IO monad.
