@@ -1,47 +1,35 @@
 
 module Main(main) where
 
-import TSTK.Parse(program)
-import TSTK.Eval(addAST, eval, newState, State(ast, place, stk, labels))
+import TSTK.Lexer
+import TSTK.Exec
 
 import Control.Monad(unless)
 import System.Environment
 import System.IO
-import Text.ParserCombinators.Parsec(parse, parseFromFile)
 
 main = do args <- getArgs
           if not (null args) then runFiles args else repl
 
 -- | Runs multiple file one after the other in the same runtime.
 runFiles :: [String] -> IO ()
-runFiles (file:files) = do result <- parseFromFile program file
-                           case result of
-                             Left err -> print err
-                             Right ast -> do state <- eval $ newState ast
-                                             runFiles' files state
+runFiles files = runFiles' files newState
   where
     runFiles' [] state = return ()
-    runFiles' (file:files) state = do result <- parseFromFile program file
-                                      case result of
-                                        Left err -> print err
-                                        Right ast -> do state <- eval $ addAST state ast
-                                                        runFiles' files state
+    runFiles' (file:files) state = do conts <- readFile file
+                                      let ast = scan conts
+                                      case addAST state ast of
+                                       Nothing -> putStrLn "Failed to load AST"
+                                       Just state' -> do state'' <- exec state'
+                                                         runFiles' files state''
 
--- | Starts the TSTK REPL.
 repl ::  IO ()
-repl = do code <- getLine
-          case parse program "TSTK parser" code of
-            Left err -> print err
-            Right ast -> do state <- eval $ newState ast
-                            repl' state
-
+repl = repl' newState
   where
-    repl' :: State -> IO ()
-    repl' state = do print $ reverse $ stk state
-                     iseof <- isEOF
-                     unless iseof $
-                       do code <- getLine
-                          case parse program "TSTK parser" code of
-                            Left err -> print err
-                            Right ast -> do state <- eval $ addAST state ast
-                                            repl' state
+    repl' state = do line <- getLine
+                     let ast = scan line
+                     case addAST state ast of
+                      Nothing -> putStrLn "Failed to load AST"
+                      Just state' -> do state'' <- exec state'
+                                        print $ reverse $ stk state''
+                                        repl' state''

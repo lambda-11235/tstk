@@ -1,21 +1,24 @@
 {-|
-Module: TSTK.Eval
+Module: Exec
 Description: Functions for evaluating TSTK code.
 License: GPL-3
 
 This module contains facilities to evaluate parse TSTK code.
 -}
 
-module TSTK.Eval(addAST, eval, newState, State(ast, place, stk, labels)) where
+module TSTK.Exec (addAST, exec, newState, State(coms, place, stk, labels)) where
 
-import TSTK.Parse
+import TSTK.AST
+
+import qualified Data.Map as M
+
 
 -- | Holds the current state of evaluation in a TSTK program.
-data State = State { ast :: [Node] -- ^ The abstract syntax tree of the TSTK code.
-                   , place :: Int -- ^ The place in the AST being evaluated.
-                   , stk :: [Integer] -- ^ The stack for this TSTK program.
-                   , labels :: [(String, Int)] -- ^ A map of label names to
-                                               -- their place in the AST.
+data State = State { coms :: [Command]        -- ^ The commands of the TSTK code.
+                   , place :: Int             -- ^ The place in the code being evaluated.
+                   , stk :: [Integer]         -- ^ The stack for this TSTK program.
+                   , labels :: M.Map String Int -- ^ A map of label names to
+                                                -- their place in the code.
                    }
 
 -- | Executes the next statement in the AST.
@@ -23,47 +26,49 @@ execNext :: State -> IO State
 execNext state = exec $ state {place = (place state) + 1}
 
 -- | Constructs a new state from an AST.
-newState :: [Node] -> State
-newState ast = State ast 0 [] []
+newState :: State
+newState = State [] 0 [] M.empty
 
--- | Appends an AST to the given state.
-addAST state newAST = state {ast = (ast state) ++ newAST}
 
--- | Evaluates the AST and returns an IO monad.
-eval :: State -- ^ The initial state of the TSTK program.
-        -> IO State -- ^ An IO monad containing the state after evaluation.
-eval state = exec $ state {labels = (getLabels (ast state))}
+-- | Converts an AST with labels to a series of commands, with references being
+-- replaced by their addresses.
+convertLabels :: AST -> Maybe [Command]
+convertLabels ast = conLbls (getLabels ast) ast
+  where
+    conLbls _ [] = return []
+    conLbls lbls ((Label _):ast) = conLbls lbls ast
+    conLbls lbls ((Refer name):ast) = do addr <- M.lookup name lbls
+                                         coms <- conLbls lbls ast
+                                         return ((Int $ toInteger addr):coms)
+    conLbls lbls ((Command com):ast) = do coms <- conLbls lbls ast
+                                          return (com:coms)
 
--- | Returns a map of labels to their positions in the AST.
-getLabels ::
-  [Node] -- ^ The given AST.
-  -> [(String, Int)]
+-- | Returns a map of label names to the addresses they refer to.
+getLabels :: AST -> M.Map String Int
 getLabels ast = getLabels' ast 0
   where
-    getLabels' [] _ = []
-    getLabels' (node:nodes) place = case node of
-      Label name -> (name, place):(getLabels' nodes (place + 1))
-      _ -> getLabels' nodes (place + 1)
+    getLabels' [] _ = M.empty
+    getLabels' ((Label name) : ast) n = let lbls = getLabels' ast n
+                                        in M.insert name n lbls
+    getLabels' (_:ast) n = getLabels' ast (n + 1)
+
+-- | Appends an AST to the given state.
+addAST :: State -> AST -> Maybe State
+addAST state newAST = do newComs <- convertLabels newAST
+                         return $ state {coms = (coms state) ++ newComs}
 
 -- | Executes a given statement in the AST and returns an IO monad.
 exec ::
   State -- ^ The state of the TSTK program.
   -> IO State -- ^ The resulting IO monad.
-exec state = if (place state) < (length $ ast state)
+exec state = if (place state) < (length $ coms state)
              then run state
              else return state
 
 run :: State -> IO State
-run state@(State ast place stk labels) = case (ast !! place) of
-    Label name -> execNext state
-    Refer name -> refer name state
-    Command name -> command name state
-    Number n ->  execNext state {stk = n:stk}
-
-refer :: String -> State -> IO State
-refer name state@(State ast place stk labels) = case (lookup name labels) of
-  Nothing -> fail ("Couldn't find label " ++ name)
-  Just pos -> execNext state {stk = ((toInteger pos):stk)}
+run state@(State coms place stk labels) = case (coms !! place) of
+    Com name -> command name state
+    Int n ->  execNext state {stk = n:stk}
 
 set :: Integer -> Integer -> [Integer] -> Maybe [Integer]
 set _ _ [] = Nothing
@@ -78,7 +83,7 @@ command ::
   String -- ^ The name of the command.
   -> State -- ^ The state of the current execution environment.
   -> IO State -- ^ The resulting IO monad.
-command name state@(State ast place stk labels) = case (name, stk) of
+command name state@(State coms place stk labels) = case (name, stk) of
   ("add", (n:m:rest)) -> execNext state {stk = ((m + n):rest)}
   ("sub", (n:m:rest)) -> execNext state {stk = ((m - n):rest)}
   ("mul", (n:m:rest)) -> execNext state {stk = ((m * n):rest)}

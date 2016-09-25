@@ -16,4 +16,4 @@
 # Print all the numbers on the stack as their ascii character
 :ploop:
 cprint
-@ploop size 1 jgt
+size 0 @ploop jgt

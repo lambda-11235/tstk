@@ -69,8 +69,9 @@ first number, and pushes the result.
 
 dup - Duplicates the number on the top of the stack. `...,a -> ...,a,a`
 
-jmp - Pops a number off the stack and goes to that token in the program (indexed
-from 0). `...,addr -> ...`
+jmp - Pops a number off the stack and goes to that operation in the program.
+Operations are indexed from 0 and exclude labels but not references.
+`...,addr -> ...`
 
 jeq - Pops three numbers of the stack, tests if last two are equal, and jumps
 to the first one if they are. `...,a,b,addr -> ...` if `a = b`
